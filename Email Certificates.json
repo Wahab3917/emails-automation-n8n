@@ -1,0 +1,240 @@
+{
+  "name": "Email Certificates",
+  "nodes": [
+    {
+      "parameters": {
+        "filePath": "/home/node/.n8n-files/automation/participants.csv"
+      },
+      "id": "read_csv_file",
+      "name": "Read CSV File",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "position": [
+        256,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "parse_csv",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "position": [
+        464,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "split_batches",
+      "name": "Split In Batches",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        656,
+        304
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\n\n// If there are no items, or first item has no data, stop execution\nif (items.length === 0 || !items[0].json || !items[0].json['Team Name']) {\n  return [];\n}\n\n// Get the context from Split In Batches\nconst context = $input.context;\n\n// Calculate the current index based on which batch we're on\nconst totalProcessed = context.currentRunIndex || 0;\nconst index = totalProcessed + 1;\n\n// Return the item with the index\nreturn [\n  {\n    json: {\n      ...$input.first().json,\n      index: index\n    },\n    binary: $input.first().binary\n  }\n];"
+      },
+      "id": "add_index",
+      "name": "Add Index",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        864,
+        304
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "filePath": "=/home/node/.n8n-files/automation/certificates/{{ $json.index }}.jpg",
+        "dataPropertyName": "certificate_file"
+      },
+      "id": "read_certificate",
+      "name": "Read Certificate",
+      "type": "n8n-nodes-base.readBinaryFile",
+      "position": [
+        1056,
+        304
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.Email }}",
+        "subject": "=UMT TechVerse Participation Certificate",
+        "message": "=Dear {{ $json[\"Team Lead\"] }},\n<br><br>\nPlease find attached the certificate for your team, \"{{ $json[\"Team Name\"] }}\".\n<br><br>\nWe look forward to hosting you and your team again at next year's competition!\n<br><br>\nBest regards.",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "certificate_file"
+              }
+            ]
+          }
+        }
+      },
+      "id": "send_email",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "position": [
+        1264,
+        304
+      ],
+      "webhookId": "32e3a4ae-f45c-4be6-9a40-d52babfe8cba",
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "C1YJtNXTjVSgcvOV",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.floor(Math.random() * 3) + 2 }}"
+      },
+      "id": "wait_node",
+      "name": "Wait",
+      "type": "n8n-nodes-base.wait",
+      "position": [
+        1472,
+        304
+      ],
+      "typeVersion": 1.1,
+      "webhookId": "5f495da4-7563-416d-aedc-2963ff3e37bc"
+    },
+    {
+      "parameters": {},
+      "id": "cd9add80-7d89-4f94-bafb-9df755f60453",
+      "name": "When clicking 'Execute workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        32,
+        304
+      ],
+      "typeVersion": 1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Index": {
+      "main": [
+        [
+          {
+            "node": "Read Certificate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Split In Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CSV File": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Certificate": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split In Batches": {
+      "main": [
+        [
+          {
+            "node": "Add Index",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking 'Execute workflow'": {
+      "main": [
+        [
+          {
+            "node": "Read CSV File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "dbfc89c1-ff09-4032-bc8b-811f4573a72d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e911e85aecd3b59e6937164008ac140444f7a2718865af8b2aafa4a70f18438e"
+  },
+  "id": "soYXGIzgAhOfuRY0maKh1",
+  "tags": []
+}
