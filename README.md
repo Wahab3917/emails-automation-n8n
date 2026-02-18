@@ -1,4 +1,4 @@
-# 📧 Automated Certificate Email Distribution with n8n
+# Automated Certificate Email Distribution with n8n
 
 An automated email distribution system built with n8n that sends personalized certificates to multiple recipients via Gmail. This project uses Docker Compose for easy deployment and includes a complete n8n workflow for batch email processing.
 
